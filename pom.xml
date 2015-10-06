@@ -87,7 +87,7 @@
 		<dependency>
 			<groupId>net.lamberto.junit</groupId>
 			<artifactId>guice-junit-runner</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1</version>
 			<scope>test</scope>
 		</dependency>
 

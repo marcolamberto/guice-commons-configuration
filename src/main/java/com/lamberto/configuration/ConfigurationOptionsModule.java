@@ -15,12 +15,12 @@ import org.apache.commons.configuration.MapConfiguration;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.PrivateModule;
 import com.google.inject.Provider;
 
 @Slf4j
-public class ConfigurationOptionsModule extends AbstractModule {
+public class ConfigurationOptionsModule extends PrivateModule {
 	private final Configuration configuration;
 	private final Collection<Class<? extends ConfigurationOptionType>> configurationOptions;
 
@@ -176,6 +176,8 @@ public class ConfigurationOptionsModule extends AbstractModule {
 					}
 				});
 			}
+
+			expose(confType).annotatedWith(ConfigurationOptions.configuration(keyClass));
 		}
 	}
 

@@ -46,6 +46,31 @@ public class ConfigurationOptionsModuleTest {
 		}
 	}
 
+	public static class MultipleInstancesModule extends AbstractModule {
+		@Override
+		protected void configure() {
+			install(new ConfigurationOptionsModule(
+				ImmutableMap.of(
+					"K1", "V1",
+					"K2", "V1,V2",
+					"K3", "true",
+					"I1", "IF!"
+				),
+				ConfigurationOptionsModuleTest.K1.class,
+				ConfigurationOptionsModuleTest.K2.class
+			));
+			install(new ConfigurationOptionsModule(
+				ImmutableMap.of(
+					"K1", "V1",
+					"K2", "V1,V2",
+					"K3", "true",
+					"I1", "IF!"
+				),
+				ConfigurationOptionsModuleTest.OptionsHolder.class
+			));
+		}
+	}
+
 	public static class SampleBean {
 		@Inject @ConfigurationOption(ConfigurationOptionsModuleTest.K1.class)
 		public String k1;
@@ -76,5 +101,14 @@ public class ConfigurationOptionsModuleTest {
 		final Configuration conf = new MapConfiguration(ImmutableMap.of("envBased", "${env:PATH}"));
 
 		assertThat(conf.getString("envBased"), is(not("${env:PATH}")));
+	}
+
+	@Test
+	@GuiceModules(ConfigurationOptionsModuleTest.MultipleInstancesModule.class)
+	public void itShouldSupportMultipleConfigurations() {
+		assertThat(sampleBean.k1, is("V1"));
+		assertThat(sampleBean.k2.length, is(2));
+		assertThat(sampleBean.k3, is(true));
+		assertThat(sampleBean.i1, is("IF!"));
 	}
 }
