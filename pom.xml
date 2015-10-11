@@ -5,12 +5,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>guice-commons-configuration</artifactId>
 	<groupId>net.lamberto.junit</groupId>
-	<version>1.0.0</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Guice Commons Configuration</name>
-	<!-- <description>A JUnit Runner allowing Guice-based testing. Each test
-		method is running with a clean Injector instance.</description> -->
+	<description>
+		A Guice module using Apache Commons Configuration for mapping named properties by using a type-based injection.
+	</description>
 	<url>https://github.com/marcolamberto/guice-commons-configuration</url>
 
 	<licenses>
