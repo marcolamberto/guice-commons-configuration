@@ -47,6 +47,18 @@ public interface ConfigurationOptionTypes {
 		}
 	}
 
+	public static class LongOption implements ConfigurationOptionType<Long> {
+		@Override
+		public Class<Long> getConfigurationType() {
+			return Long.class;
+		}
+
+		@Override
+		public Long getValueFor(final String name, final Configuration configuration) {
+			return configuration.getLong(name);
+		}
+	}
+
 	public static class BooleanOption implements ConfigurationOptionType<Boolean> {
 		@Override
 		public Class<Boolean> getConfigurationType() {
@@ -68,11 +80,14 @@ public interface ConfigurationOptionTypes {
 
 		@Override
 		public URL getValueFor(final String name, final Configuration configuration) {
+			final String url = configuration.getString(name);
+
             try {
-                return new URL(configuration.getString(name));
+				return new URL(url);
             } catch (final MalformedURLException e) {
-                log.warn("Invalid URL", e);
-                return null;
+            	final String message = String.format("Invalid URL '%s'", url);
+				log.warn(message, e);
+                throw new ConfigurationException(message);
             }
 		}
 	}

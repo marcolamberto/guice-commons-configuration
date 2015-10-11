@@ -24,74 +24,48 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.ProvisionException;
 
-import net.lamberto.configuration.ConfigurationOptionsModuleTest.InnerClass.BooleanCfg;
-import net.lamberto.configuration.ConfigurationOptionsModuleTest.InnerInterface.StringCfg;
-import net.lamberto.configuration.ConfigurationOptionsModuleTest.InvalidOptions.CUSTOM_OPTION;
-import net.lamberto.configuration.ConfigurationOptionsModuleTest.InvalidOptions.MissingCfg;
+import net.lamberto.configuration.ConfigurationOptionsClassLevel.DISABLE_CONNECT;
+import net.lamberto.configuration.ConfigurationOptionsClassLevel.MAX_FILE_SIZE;
+import net.lamberto.configuration.ConfigurationOptionsClassLevel.NAME;
+import net.lamberto.configuration.ConfigurationOptionsClassLevel.OPTIONS;
+import net.lamberto.configuration.ConfigurationOptionsClassLevel.TARGET_URL;
+import net.lamberto.configuration.ConfigurationOptionsExtras.CUSTOM_OPTION;
+import net.lamberto.configuration.ConfigurationOptionsExtras.MISSING;
+import net.lamberto.configuration.ConfigurationOptionsInterfaceLevel.HOSTNAME;
+import net.lamberto.configuration.ConfigurationOptionsInterfaceLevel.PORT;
 import net.lamberto.junit.GuiceJUnitRunner;
 import net.lamberto.junit.GuiceJUnitRunner.GuiceModules;
 
 @RunWith(GuiceJUnitRunner.class)
-@GuiceModules(ConfigurationOptionsModuleTest.Module.class)
+@GuiceModules(ConfigurationOptionsModuleTest.DefaultModule.class)
 public class ConfigurationOptionsModuleTest {
-	private static final String CLASS_LEVEL_STRING_CFG_VALUE = "V1";
-	private static final Collection<String> CLASS_LEVEL_ARRAY_CFG_VALUE = ImmutableList.of("V1", "V2");
-	private static final Integer CLASS_LEVEL_INTEGER_CFG_VALUE = 42;
-	private static final URL CLASS_LEVEL_URL_CFG_VALUE = newURL("http://www.gimp.org");
-	private static final Boolean INNER_CLASS_BOOLEAN_CFG_VALUE = Boolean.TRUE;
-	private static final String INNER_INTERFACE_STRING_CFG_VALUE = "IF!";
+	private static final String NAME_VALUE = "V1";
+	private static final Collection<String> OPTIONS_VALUE = ImmutableList.of("V1", "V2");
+	private static final Integer PORT_VALUE = 42;
+	private static final URL TARGET_URL_VALUE = newURL("http://www.gimp.org");
+	private static final Boolean DISABLE_CONNECT_VALUE = Boolean.TRUE;
+	private static final String HOSTNAME_VALUE = "IF!";
+	private static final Long MAX_FILE_SIZE_VALUE = 1001L;
 
 
-	private static final ImmutableMap<String, String> CONFIGURATION_SOURCE = ImmutableMap.<String, String>builder()
-		.put(ClassLevelStringCfg.class.getSimpleName(), CLASS_LEVEL_STRING_CFG_VALUE)
-		.put(ClassLevelArrayCfg.class.getSimpleName(), Joiner.on(',').join(CLASS_LEVEL_ARRAY_CFG_VALUE))
-		.put(ClassLevelIntegerCfg.class.getSimpleName(), CLASS_LEVEL_INTEGER_CFG_VALUE.toString())
-		.put(ClassLevelURLCfg.class.getSimpleName(), CLASS_LEVEL_URL_CFG_VALUE.toString())
-		.put(InnerClass.BooleanCfg.class.getSimpleName(), INNER_CLASS_BOOLEAN_CFG_VALUE.toString())
-		.put(InnerInterface.StringCfg.class.getSimpleName(), INNER_INTERFACE_STRING_CFG_VALUE)
+	private static final ImmutableMap<String, String> CONFIGURATION_PROPERTIES = ImmutableMap.<String, String>builder()
+		.put(NAME.class.getSimpleName(), NAME_VALUE)
+		.put(OPTIONS.class.getSimpleName(), Joiner.on(',').join(OPTIONS_VALUE))
+		.put(PORT.class.getSimpleName(), PORT_VALUE.toString())
+		.put(TARGET_URL.class.getSimpleName(), TARGET_URL_VALUE.toString())
+		.put(DISABLE_CONNECT.class.getSimpleName(), DISABLE_CONNECT_VALUE.toString())
+		.put(HOSTNAME.class.getSimpleName(), HOSTNAME_VALUE)
+		.put(MAX_FILE_SIZE.class.getSimpleName(), MAX_FILE_SIZE_VALUE.toString())
 	.build();
 
 
-	// class-level configuration properties
-	public static class ClassLevelStringCfg extends ConfigurationOptionTypes.StringOption {}
-	public static class ClassLevelArrayCfg extends ConfigurationOptionTypes.StringArrayOption {}
-	public static class ClassLevelIntegerCfg extends ConfigurationOptionTypes.IntegerOption {}
-	public static class ClassLevelURLCfg extends ConfigurationOptionTypes.URLOption {}
-
-	// invalid configuration properties
-	public static interface InvalidOptions {
-		public static class MissingCfg extends ConfigurationOptionTypes.StringOption {}
-		public static class CUSTOM_OPTION implements ConfigurationOptionType<Object> {
-			@Override
-			public Class<Object> getConfigurationType() {
-				return Object.class;
-			}
-
-			@Override
-			public Object getValueFor(final String name, final Configuration configuration) {
-				return configuration.getString(name);
-			}
-		}
-	}
-
-	// interface-level configuration properties
-	public static interface InnerInterface {
-		class StringCfg extends ConfigurationOptionTypes.StringOption {};
-	}
-
-	// inner-class-level configuration properties
-	public static class InnerClass implements InnerInterface {
-		public static class BooleanCfg extends ConfigurationOptionTypes.BooleanOption {}
-	}
-
-
-	public static class Module extends AbstractModule {
+	public static class DefaultModule extends AbstractModule {
 		@Override
 		protected void configure() {
 			install(new ConfigurationOptionsModule(
-				CONFIGURATION_SOURCE,
-				ConfigurationOptionsModuleTest.class,
-				InnerClass.class
+				CONFIGURATION_PROPERTIES,
+				ConfigurationOptionsClassLevel.class,
+				ConfigurationOptionsInterfaceLevel.class
 			));
 		}
 	}
@@ -99,10 +73,10 @@ public class ConfigurationOptionsModuleTest {
 	public static class MissingConfigurationModule extends AbstractModule {
 		@Override
 		protected void configure() {
-			install(new Module());
+			install(new DefaultModule());
 			install(new ConfigurationOptionsModule(
-				CONFIGURATION_SOURCE,
-				MissingCfg.class
+				CONFIGURATION_PROPERTIES,
+				MISSING.class
 			));
 		}
 	}
@@ -110,9 +84,9 @@ public class ConfigurationOptionsModuleTest {
 	public static class CustomOptionConfigurationModule extends AbstractModule {
 		@Override
 		protected void configure() {
-			install(new Module());
+			install(new DefaultModule());
 			install(new ConfigurationOptionsModule(
-				ImmutableMap.of("CUSTOM_OPTION", "customized!"),
+				ImmutableMap.of(CUSTOM_OPTION.class.getSimpleName(), "customized!"),
 				CUSTOM_OPTION.class
 			));
 		}
@@ -122,38 +96,19 @@ public class ConfigurationOptionsModuleTest {
 		@Override
 		protected void configure() {
 			install(new ConfigurationOptionsModule(
-				CONFIGURATION_SOURCE,
-				ClassLevelStringCfg.class,
-				ClassLevelArrayCfg.class,
-				ClassLevelIntegerCfg.class,
-				ClassLevelURLCfg.class
+				CONFIGURATION_PROPERTIES,
+				NAME.class,
+				OPTIONS.class,
+				PORT.class,
+				TARGET_URL.class
 			));
 			install(new ConfigurationOptionsModule(
-				CONFIGURATION_SOURCE,
-				InnerClass.class
+				CONFIGURATION_PROPERTIES,
+				HOSTNAME.class,
+				DISABLE_CONNECT.class,
+				MAX_FILE_SIZE.class
 			));
 		}
-	}
-
-
-	public static class SampleBean {
-		@Inject @ConfigurationOption(ClassLevelStringCfg.class)
-		public String k1;
-
-		@Inject @ConfigurationOption(ClassLevelArrayCfg.class)
-		public String[] k2;
-
-		@Inject @ConfigurationOption(BooleanCfg.class)
-		public Boolean k3;
-
-		@Inject @ConfigurationOption(StringCfg.class)
-		public String i1;
-
-		@Inject @ConfigurationOption(ClassLevelIntegerCfg.class)
-		public Integer intCfg;
-
-		@Inject @ConfigurationOption(ClassLevelURLCfg.class)
-		public URL urlCfg;
 	}
 
 
@@ -169,12 +124,13 @@ public class ConfigurationOptionsModuleTest {
 
 	@Test
 	public void basicUsage() {
-		assertThat(sampleBean.k1, is(CLASS_LEVEL_STRING_CFG_VALUE));
-		assertThat(sampleBean.k2.length, is(CLASS_LEVEL_ARRAY_CFG_VALUE.size()));
-		assertThat(sampleBean.k3, is(INNER_CLASS_BOOLEAN_CFG_VALUE));
-		assertThat(sampleBean.i1, is(INNER_INTERFACE_STRING_CFG_VALUE));
-		assertThat(sampleBean.intCfg, is(CLASS_LEVEL_INTEGER_CFG_VALUE));
-		assertThat(sampleBean.urlCfg, is(CLASS_LEVEL_URL_CFG_VALUE));
+		assertThat(sampleBean.name, is(NAME_VALUE));
+		assertThat(sampleBean.options.length, is(OPTIONS_VALUE.size()));
+		assertThat(sampleBean.disableConnect, is(DISABLE_CONNECT_VALUE));
+		assertThat(sampleBean.hostName, is(HOSTNAME_VALUE));
+		assertThat(sampleBean.port, is(PORT_VALUE));
+		assertThat(sampleBean.targetUrl, is(TARGET_URL_VALUE));
+		assertThat(sampleBean.maxFileSize, is(MAX_FILE_SIZE_VALUE));
 	}
 
 	@Test
@@ -187,10 +143,10 @@ public class ConfigurationOptionsModuleTest {
 	@Test
 	@GuiceModules(MultipleInstancesModule.class)
 	public void itShouldSupportMultipleConfigurations() {
-		assertThat(sampleBean.k1, is(CLASS_LEVEL_STRING_CFG_VALUE));
-		assertThat(sampleBean.k2.length, is(CLASS_LEVEL_ARRAY_CFG_VALUE.size()));
-		assertThat(sampleBean.k3, is(INNER_CLASS_BOOLEAN_CFG_VALUE));
-		assertThat(sampleBean.i1, is(INNER_INTERFACE_STRING_CFG_VALUE));
+		assertThat(sampleBean.name, is(NAME_VALUE));
+		assertThat(sampleBean.options.length, is(OPTIONS_VALUE.size()));
+		assertThat(sampleBean.disableConnect, is(DISABLE_CONNECT_VALUE));
+		assertThat(sampleBean.hostName, is(HOSTNAME_VALUE));
 	}
 
 	@Test
@@ -198,11 +154,11 @@ public class ConfigurationOptionsModuleTest {
 	public void itShouldThrowAnExceptionForMissingConfigurationKeys() {
 		thrown.expect(ProvisionException.class);
 		thrown.expectCause(isA(ConfigurationException.class));
-		thrown.expectMessage("No configuration property found for 'MissingCfg'");
+		thrown.expectMessage("No configuration property found for 'MISSING'");
 
 		injector.injectMembers(new Object() {
 			@Inject
-			@ConfigurationOption(MissingCfg.class)
+			@ConfigurationOption(MISSING.class)
 			private String whoCares;
 		});
 	}
@@ -220,6 +176,7 @@ public class ConfigurationOptionsModuleTest {
 
 		assertThat(obj.getClass().getField("custom").get(obj).toString(), is("customized!"));
 	}
+
 
 	private static URL newURL(final String url) {
 		try {
