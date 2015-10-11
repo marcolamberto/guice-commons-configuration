@@ -1,4 +1,4 @@
-package com.lamberto.configuration;
+package net.lamberto.configuration;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;

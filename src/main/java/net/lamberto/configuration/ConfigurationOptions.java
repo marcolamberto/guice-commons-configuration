@@ -1,4 +1,4 @@
-package com.lamberto.configuration;
+package net.lamberto.configuration;
 
 
 public final class ConfigurationOptions {

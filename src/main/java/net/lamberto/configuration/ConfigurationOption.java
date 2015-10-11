@@ -1,4 +1,4 @@
-package com.lamberto.configuration;
+package net.lamberto.configuration;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 

@@ -1,4 +1,4 @@
-package com.lamberto.configuration;
+package net.lamberto.configuration;
 
 public class ConfigurationNotFoundException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
