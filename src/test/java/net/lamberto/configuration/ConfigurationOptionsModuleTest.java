@@ -20,16 +20,14 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
-import com.google.inject.CreationException;
-import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.ProvisionException;
 
 import net.lamberto.configuration.ConfigurationOptionsModuleTest.InnerClass.BooleanCfg;
 import net.lamberto.configuration.ConfigurationOptionsModuleTest.InnerInterface.StringCfg;
+import net.lamberto.configuration.ConfigurationOptionsModuleTest.InvalidOptions.CUSTOM_OPTION;
 import net.lamberto.configuration.ConfigurationOptionsModuleTest.InvalidOptions.MissingCfg;
-import net.lamberto.configuration.ConfigurationOptionsModuleTest.InvalidOptions.UnkwnownCfg;
 import net.lamberto.junit.GuiceJUnitRunner;
 import net.lamberto.junit.GuiceJUnitRunner.GuiceModules;
 
@@ -63,7 +61,17 @@ public class ConfigurationOptionsModuleTest {
 	// invalid configuration properties
 	public static interface InvalidOptions {
 		public static class MissingCfg extends ConfigurationOptionTypes.StringOption {}
-		public static class UnkwnownCfg implements ConfigurationOptionType {}
+		public static class CUSTOM_OPTION implements ConfigurationOptionType<Object> {
+			@Override
+			public Class<Object> getConfigurationType() {
+				return Object.class;
+			}
+
+			@Override
+			public Object getValueFor(final String name, final Configuration configuration) {
+				return configuration.getString(name);
+			}
+		}
 	}
 
 	// interface-level configuration properties
@@ -99,13 +107,13 @@ public class ConfigurationOptionsModuleTest {
 		}
 	}
 
-	public static class UnknownConfigurationModule extends AbstractModule {
+	public static class CustomOptionConfigurationModule extends AbstractModule {
 		@Override
 		protected void configure() {
 			install(new Module());
 			install(new ConfigurationOptionsModule(
-				CONFIGURATION_SOURCE,
-				UnkwnownCfg.class
+				ImmutableMap.of("CUSTOM_OPTION", "customized!"),
+				CUSTOM_OPTION.class
 			));
 		}
 	}
@@ -189,7 +197,7 @@ public class ConfigurationOptionsModuleTest {
 	@GuiceModules(MissingConfigurationModule.class)
 	public void itShouldThrowAnExceptionForMissingConfigurationKeys() {
 		thrown.expect(ProvisionException.class);
-		thrown.expectCause(isA(ConfigurationNotFoundException.class));
+		thrown.expectCause(isA(ConfigurationException.class));
 		thrown.expectMessage("No configuration property found for 'MissingCfg'");
 
 		injector.injectMembers(new Object() {
@@ -200,12 +208,17 @@ public class ConfigurationOptionsModuleTest {
 	}
 
 	@Test
-	public void itShouldThrowAnExceptionForUnknownConfigurationType() {
-		thrown.expect(CreationException.class);
-		thrown.expectCause(isA(ConfigurationNotFoundException.class));
-		thrown.expectMessage("No configuration type found for 'UnkwnownCfg'");
+	@GuiceModules(CustomOptionConfigurationModule.class)
+	public void itShouldAllowCustomConfigurationTypes() throws Exception {
+		final Object obj = new Object() {
+			@Inject
+			@ConfigurationOption(CUSTOM_OPTION.class)
+			public Object custom;
+		};
 
-		Guice.createInjector(new UnknownConfigurationModule());
+		injector.injectMembers(obj);
+
+		assertThat(obj.getClass().getField("custom").get(obj).toString(), is("customized!"));
 	}
 
 	private static URL newURL(final String url) {

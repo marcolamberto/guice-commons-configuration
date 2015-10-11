@@ -5,17 +5,17 @@ import java.lang.annotation.Annotation;
 
 // NOTE: quick way for suppressing "The annotation type ConfigurationOption should not be used as a superinterface for ConfigurationOptionImpl" warning
 @SuppressWarnings("all")
-class   ConfigurationOptionImpl implements ConfigurationOption, Serializable {
+class ConfigurationOptionImpl implements ConfigurationOption, Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private final Class<? extends ConfigurationOptionType> value;
+	private final Class<? extends ConfigurationOptionType<?>> value;
 
-	public ConfigurationOptionImpl(final Class<? extends ConfigurationOptionType> value) {
+	public ConfigurationOptionImpl(final Class<? extends ConfigurationOptionType<?>> value) {
 		this.value = value;
 	}
 
 	@Override
-	public Class<? extends ConfigurationOptionType> value() {
+	public Class<? extends ConfigurationOptionType<?>> value() {
 		return value;
 	}
 

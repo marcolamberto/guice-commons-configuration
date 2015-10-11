@@ -6,7 +6,7 @@ public final class ConfigurationOptions {
 		// utility class
 	}
 
-	public static ConfigurationOption configuration(final Class<? extends ConfigurationOptionType> option) {
+	public static ConfigurationOption configuration(final Class<? extends ConfigurationOptionType<?>> option) {
 		return new ConfigurationOptionImpl(option);
 	}
 }

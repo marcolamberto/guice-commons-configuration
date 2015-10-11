@@ -12,5 +12,5 @@ import com.google.inject.BindingAnnotation;
 @Target({ ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD })
 @BindingAnnotation
 public @interface ConfigurationOption {
-	Class<? extends ConfigurationOptionType> value();
+	Class<? extends ConfigurationOptionType<?>> value();
 }
